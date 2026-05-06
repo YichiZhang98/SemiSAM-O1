@@ -43,19 +43,21 @@ data/<dataset>/
 
 ### Training
 
-All commands run from `code/` directory.
+All commands run from `code/` directory. Requires `sam_med3d_turbo.pth` in `pretrained_ckpt/` (download from [SAM-Med3D](https://github.com/uni-medical/SAM-Med3D)).
 
 ```bash
 cd code
+# LA dataset, 3 rounds
 
-# Mean Teacher (MT) backbone, LA dataset, 3 rounds
+# Mean Teacher (MT) 
 python train_SemiSAM_O1.py \
     --root_path ../data/LA \
     --exp SemiSAM_O1/LA \
     --backbone mt \
     --max_iterations 15000 \
     --num_rounds 3 \
-    --seed 2025
+    --sam_ckpt pretrained_ckpt/sam_med3d_turbo.pth \
+    --seed 1337
 
 # Uncertainty-Aware Mean Teacher (UAMT)
 python train_SemiSAM_O1.py \
@@ -64,7 +66,8 @@ python train_SemiSAM_O1.py \
     --backbone uamt \
     --max_iterations 15000 \
     --num_rounds 3 \
-    --seed 2025
+    --sam_ckpt pretrained_ckpt/sam_med3d_turbo.pth \
+    --seed 1337
 
 # Deep Adversarial Network (DAN)
 python train_SemiSAM_O1.py \
@@ -73,7 +76,8 @@ python train_SemiSAM_O1.py \
     --backbone dan \
     --max_iterations 15000 \
     --num_rounds 3 \
-    --seed 2025
+    --sam_ckpt pretrained_ckpt/sam_med3d_turbo.pth \
+    --seed 1337
 
 # Dual-Task Consistency (DTC) — automatically uses unet_3D_sdf
 python train_SemiSAM_O1.py \
@@ -82,7 +86,8 @@ python train_SemiSAM_O1.py \
     --backbone dtc \
     --max_iterations 15000 \
     --num_rounds 3 \
-    --seed 2025
+    --sam_ckpt pretrained_ckpt/sam_med3d_turbo.pth \
+    --seed 1337
 ```
 
 
@@ -104,17 +109,18 @@ Models are saved to `../model/{exp}_{BACKBONE}_1label_1/{model}/`.
 
 ### Testing
 
+Pretrained weights are already placed in `model/` directory. Run from `code/`:
+
 ```bash
-python test_baseline.py \
-    --root_path ../data/LA \
-    --exp SemiSAM_O1/LA \
-    --num_classes 2 \
-    --ckpt [roundN_best.pth] \
-    --test_list test.txt \
-    --save_pred output_dir/
+cd code
+
+python test_baseline.py --root_path ../data/LA --exp LA_O1/MT --model unet_3D --num_classes 2
+python test_baseline.py --root_path ../data/LA --exp LA_O1/UAMT --model unet_3D --num_classes 2
+python test_baseline.py --root_path ../data/LA --exp LA_O1/DAN --model unet_3D --num_classes 2
+python test_baseline.py --root_path ../data/LA --exp LA_O1/DTC --model unet_3D_sdf --num_classes 2
 ```
 
-For DTC backbone, add `--model unet_3D_sdf`.
+To save predictions as NIfTI, add `--save_pred output_dir/`.
 
 Metrics reported: Dice, Jaccard, 95% Hausdorff Distance (95HD), Average Surface Distance (ASD).
 
